@@ -41,7 +41,8 @@ func randomNumberHandler(isActiveGPT bool) func(int) int {
 }
 
 func main() {
-	fmt.Println("Guessing game using GPT3.5")
+	fmt.Println("-- Guessing game using GPT3.5 --")
+	fmt.Println("Guess the secret number between 0 and 50.")
 
 	openaiToken := readEnvVar("OPENAI_TOKEN")
 
@@ -52,7 +53,7 @@ func main() {
 	}
 
 	handler := randomNumberHandler(isActiveGPT)
-	secretNumber := handler(100)
+	secretNumber := handler(50)
 
 	if isActiveGPT {
 		clue, err := gpt_completion(fmt.Sprintf("Tell me a funny clue that helps me to guess the secret number. Just returns the clue without the secret number nor the clue's explanation.: %v", secretNumber))
@@ -66,7 +67,7 @@ func main() {
 	var guess string
 
 	for {
-		fmt.Println("Input your guess: ")
+		fmt.Print("Input your guess: ")
 		_, err := fmt.Scanln(&guess)
 
 		if err != nil {
