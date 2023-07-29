@@ -11,5 +11,6 @@ If you don't have an OPENAI_TOKEN, don't worry, the game will generate a random 
 
 ## Enjoy it!
 
-https://github.com/jamesev15/gpt-game/assets/84110446/a406882a-8875-4d6b-9eee-d5e7f99cf9a7
+https://github.com/jamesev15/gpt-game/assets/84110446/437acf19-eb00-4a79-89ef-762cec607205
+
 
