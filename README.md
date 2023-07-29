@@ -9,7 +9,8 @@ You must to set up your token as below
 
 If you don't have an OPENAI_TOKEN, don't worry, the game will generate a random number by itself
 
-## Enjoy it!
+## Enjoy it!  
+If you set up the token, GPT will give you a clue to find the secret number!
 
 https://github.com/jamesev15/gpt-game/assets/84110446/437acf19-eb00-4a79-89ef-762cec607205
 
