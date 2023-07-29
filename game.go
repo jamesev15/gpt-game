@@ -1,98 +1,22 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
-	"net/http"
-	"os"
 	"strconv"
 )
-
-type GptMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type GptPayload struct {
-	Model       string       `json:"model"`
-	Temperature float64      `json:"temperature"`
-	Messages    []GptMessage `json:"messages"`
-}
-
-type GptChoice struct {
-	Message GptMessage `json:"message"`
-}
-
-type GptResponse struct {
-	Choices []GptChoice `json:"choices"`
-}
-
-func readEnvVar(env string) string {
-	return os.Getenv(env)
-}
 
 func generateRandomNumber(max int) int {
 	return rand.Intn(max)
 }
 
 func generateRandomNumberGPT(max int) int {
-	gptPayload := GptPayload{
-		Model:       "gpt-3.5-turbo",
-		Temperature: 0.7,
-		Messages: []GptMessage{
-			{
-				Role:    "user",
-				Content: fmt.Sprintf("Generate a random number between 0 and %v. Only return the number without explanation", max),
-			},
-		},
-	}
-
-	jsonData, err := json.Marshal(gptPayload)
+	numberStr, err := gpt_completion(fmt.Sprintf("Generate a random number between 0 and %v. Only return the number without explanation", max))
 
 	if err != nil {
-		fmt.Println("Internal Error converting Payload for GPT", err)
-		return 50
+		log.Fatal(err)
 	}
-
-	req, _ := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonData))
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", readEnvVar("OPENAI_TOKEN")))
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return 50
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Error in response")
-		return 50
-	}
-
-	responseBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading body", err)
-		return 50
-	}
-
-	var gptResponse GptResponse
-	err = json.Unmarshal(responseBytes, &gptResponse)
-
-	if err != nil {
-		fmt.Println("Error parsing GPT response")
-		return 50
-	}
-
-	numberStr := gptResponse.Choices[0].Message.Content
 
 	n, err := strconv.Atoi(numberStr)
 
@@ -104,10 +28,8 @@ func generateRandomNumberGPT(max int) int {
 	return n
 }
 
-func randomNumberHandler() func(int) int {
-	openaiToken := readEnvVar("OPENAI_TOKEN")
-
-	if openaiToken != "" {
+func randomNumberHandler(isActiveGPT bool) func(int) int {
+	if isActiveGPT {
 		fmt.Println("OPENAI TOKEN found!")
 		fmt.Println("Generating random number with GPT 3.5")
 		return generateRandomNumberGPT
@@ -121,8 +43,25 @@ func randomNumberHandler() func(int) int {
 func main() {
 	fmt.Println("Guessing game using GPT3.5")
 
-	handler := randomNumberHandler()
+	openaiToken := readEnvVar("OPENAI_TOKEN")
+
+	var isActiveGPT bool
+
+	if openaiToken != "" {
+		isActiveGPT = true
+	}
+
+	handler := randomNumberHandler(isActiveGPT)
 	secretNumber := handler(100)
+
+	if isActiveGPT {
+		clue, err := gpt_completion(fmt.Sprintf("Tell me a funny clue that helps me to guess the secret number. Just returns the clue without the secret number nor the clue's explanation.: %v", secretNumber))
+
+		if err == nil {
+			fmt.Println("Clue: ", clue)
+		}
+
+	}
 
 	var guess string
 
